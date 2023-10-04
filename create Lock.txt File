@@ -1,0 +1,53 @@
+package com.bizzsetu.indexmanager.cronjob;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+import java.io.*;
+
+@SpringBootApplication
+public class IndexManagerCronjobApplication {
+public static int val=0;
+	public static void main(String[] args) throws IOException {
+		File lockFile = new File("/Users/krishnap/lock.txt");
+		try {
+				if (!lockFile.exists()) {
+					// Create the lock.txt file with a default value of 0
+					FileWriter fileWriter = new FileWriter(lockFile);
+					fileWriter.write("0");
+					fileWriter.close();
+				}
+				String lockStatus=getLockStatus(lockFile);
+				// Read the content of the lock.txt file
+
+				if ("0".equals(lockStatus)) {
+					// The application can run
+					System.out.println("Running the Spring Boot application...");
+					setLockStatus(lockFile,"1");
+					SpringApplication.run(IndexManagerCronjobApplication.class, args);
+					// Add your Spring Boot application startup logic here
+					// Set the lock status to 1 to prevent the application from running again
+					setLockStatus(lockFile,"0");
+				} else {
+					// The application should not run
+					System.out.println("Application is locked and cannot run.");
+				}
+			} catch (IOException e) {
+				setLockStatus(lockFile,"0");
+				e.printStackTrace();
+			}
+	}
+	private static String getLockStatus(File lockFile) throws IOException {
+		BufferedReader reader = new BufferedReader(new FileReader(lockFile));
+		String lockStatus = reader.readLine();
+		reader.close();
+		return lockStatus;
+	}
+	private static void setLockStatus(File lockFile, String status) throws IOException {
+		FileWriter fileWriter = new FileWriter(lockFile);
+		fileWriter.write(status);
+		fileWriter.close();
+	}
+
+
+	}
